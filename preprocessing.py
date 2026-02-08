@@ -405,7 +405,7 @@ class AkkadianPostprocessor:
         Truncates at word boundary to avoid splitting words.
         """
         input_len = len(input_text)
-        max_len = int(input_len * 0.5 + 30)
+        max_len = max(int(input_len * 0.5 + 30), 100)
         if len(text) <= max_len:
             return text
         words = text.split()
