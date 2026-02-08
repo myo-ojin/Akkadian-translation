@@ -61,6 +61,39 @@ Kaggle "Deep Past Challenge: Translate Akkadian to English"
 - **MBR decoding (geo_mean utility)**: Also counterproductive
 - **length_penalty=0.4 + beams=6**: Better on 50 samples (+1.52), worse on full 454 (-0.13). chrF++ dropped by 0.71.
 
+## Phase 3: Grid Search + LoRA Fine-tuning (2026-02-08)
+
+### Grid Search Results (247 multi-token val samples)
+
+Tested 24 combinations of length cap coefficients x 2 beam strategies:
+
+| Config | BLEU | chrF++ | GeoMean |
+|--------|------|--------|---------|
+| Standard Beam, no cap | 22.28 | 53.75 | 34.60 |
+| **Standard Beam, coeff=0.4/offset=20** | **30.49** | **53.09** | **40.23** |
+| Diverse Beam, best (0.4/20) | 29.65 | 52.55 | 39.47 |
+
+**Key Findings:**
+- Aggressive cap (0.4*input_len+20) improves multi-token GeoMean by +5.63
+- But **degrades full 454-sample eval** (33.32 vs 34.56) due to short-input impact
+- Diverse Beam Search is consistently worse than Standard Beam
+- Current cap (0.5*input_len+30) remains optimal for full validation set
+- Test set is all 16-34 token inputs, so aggressive cap may help on submission
+
+### External Data: Akkademia Corpus
+- Source: PNAS Nexus 2023 paper (gold-standard, expert translations)
+- 50,478 parallel training pairs (Akkadian transliteration + English)
+- From 5 ORACC sub-corpora: RINAP, RIAo, RIBo, SAAo, Suhu
+- Format normalization: `{d}-enlil` → `(d)enlil`
+- MIT license, publicly available
+
+### LoRA Fine-tuning Pipeline
+- Created `scripts/lora_finetune.py`
+- LoRA config: rank=8, alpha=16, target_modules=[q, v, o], 1.66M trainable params (0.28%)
+- Training mix: 47K Akkademia + 4.7K competition (3x weighted) = 51.7K total
+- Local test: loss 0.74 → 0.68 (Step 800/9,692) before interruption
+- **Moving to Kaggle for faster iteration** (HuggingFace Trainer with checkpointing)
+
 ## Dataset Analysis
 
 ### Val Set (454 evaluable samples)
@@ -73,13 +106,18 @@ Kaggle "Deep Past Challenge: Translate Akkadian to English"
 - All from ONE document (text_id: 332fda50)
 - Genre: Kanesh trading colony administrative letter (Old Assyrian)
 
-## Files Modified
+## Files
 
-| File | Changes |
+| File | Purpose |
 |------|---------|
-| `preprocessing.py` | Added `AkkadianPostprocessor` methods: `fix_zero_fraction`, `_remove_ngram_loops`, `truncate_to_complete_sentence`, `cap_output_length`, `get_short_input_translation`, `is_broken_text` |
-| `scripts/run_baseline.py` | Added `repetition_penalty`, `no_repeat_ngram_size` to CFG. Updated `run_inference()` with short input handler, broken text detection, length capping |
-| `scripts/evaluate.py` | Evaluation utilities (BLEU, chrF++, GeoMean) |
+| `preprocessing.py` | Pre/post-processing pipeline |
+| `mbr_decoder.py` | MBR decoding (unused - counterproductive) |
+| `scripts/run_baseline.py` | Local evaluation (supports `--lora` flag) |
+| `scripts/evaluate.py` | BLEU, chrF++, GeoMean metrics |
+| `scripts/lora_finetune.py` | LoRA fine-tuning (local) |
+| `scripts/grid_search_phase3.py` | Length cap + beam search grid search |
+| `notebooks/kaggle_lora_training.ipynb` | Kaggle LoRA training notebook |
+| `data/external/akkademia/` | Akkademia parallel corpus |
 
 ## Configuration
 
@@ -94,9 +132,9 @@ CFG = {
 }
 ```
 
-## Next Steps (Under Investigation)
+## Next Steps
 
-- LoRA fine-tuning on Kanesh colony / Old Assyrian texts
-- MBR with mixed BLEU+chrF++ utility
-- Diverse Beam Search (num_beam_groups)
-- Output length cap optimization for test set
+1. LoRA fine-tuning on Kaggle (HuggingFace Trainer, checkpointing)
+2. Evaluate LoRA-enhanced model on full val set
+3. Test-set-specific cap tuning for submission
+4. Multi-model ensemble (ByT5 + NLLB + mBART) for larger gains
