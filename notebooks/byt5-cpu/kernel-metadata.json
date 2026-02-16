@@ -17,5 +17,5 @@
     "manwithacat/byt5-rag-akkadian-v1"
   ],
   "kernel_sources": [],
-  "model_sources": []
+  "model_sources": ["manwithacat/akkadian-t5-enriched-v2/pytorch/transformers/2"]
 }
