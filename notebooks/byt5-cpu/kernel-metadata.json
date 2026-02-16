@@ -13,7 +13,8 @@
     "jeanjean111/byt5-base-big-data2",
     "qifeihhh666/train-gap-all-2",
     "assiaben/final-byt5",
-    "manwithacat/oracc-akkadian-english-parallel-corpus"
+    "manwithacat/oracc-akkadian-english-parallel-corpus",
+    "manwithacat/byt5-rag-akkadian-v1"
   ],
   "kernel_sources": [],
   "model_sources": []
