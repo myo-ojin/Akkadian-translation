@@ -1,0 +1,14 @@
+{
+  "id": "myojinryo/akkadian-debug-submission",
+  "title": "Akkadian Debug Submission",
+  "code_file": "debug_submission.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "competition_sources": ["deep-past-initiative-machine-translation"],
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
